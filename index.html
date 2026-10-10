@@ -184,7 +184,7 @@
             </div>
         </section>
 
-        <!-- Lokasi Acara (Akad Nikah & Ngunduh Mantu - Sesuai Foto 2) -->
+        <!-- Lokasi Acara -->
         <section class="py-12 px-6 text-center">
             <h2 class="text-2xl font-serif-lux tracking-widest text-white mb-1">LOKASI ACARA</h2>
             <p class="text-xs text-[#d4af37] uppercase tracking-widest font-serif-lux mb-8">Tempat & Lokasi Acara</p>
@@ -285,7 +285,7 @@
                     <textarea id="rsvp-message" rows="3" required class="w-full bg-black/50 border border-[#d4af37]/30 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#d4af37]" placeholder="Tuliskan ucapan dan doa terbaik..."></textarea>
                 </div>
 
-                <button type="submit" class="w-full py-3 bg-[#7a0b1f] hover:bg-[#9e1029] text-white font-serif-lux text-xs tracking-widest uppercase rounded-xl transition-all border border-[#d4af37]/50 shadow-md">
+                <button type="submit" id="submit-btn" class="w-full py-3 bg-[#7a0b1f] hover:bg-[#9e1029] text-white font-serif-lux text-xs tracking-widest uppercase rounded-xl transition-all border border-[#d4af37]/50 shadow-md">
                     Kirim Konfirmasi dan Ucapan
                 </button>
             </form>
@@ -294,13 +294,8 @@
             <div>
                 <h3 class="text-lg font-serif-lux text-white mb-4 text-center">Daftar Ucapan Tamu</h3>
                 <div id="wishes-container" class="space-y-3 max-h-72 overflow-y-auto pr-1">
-                    <!-- Contoh Pesan Awal -->
-                    <div class="glass-card p-4 rounded-xl border border-[#d4af37]/20 text-xs">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-bold text-[#d4af37] font-serif-lux">Elena & Family</span>
-                            <span class="text-[10px] text-gray-400">Baru saja</span>
-                        </div>
-                        <p class="text-gray-200">Selamat berbahagia Arif & Lubna! Semoga menjadi keluarga yang harmonis selamanya. 🌹</p>
+                    <div class="glass-card p-4 rounded-xl border border-[#d4af37]/20 text-xs text-center text-gray-400">
+                        Memuat ucapan...
                     </div>
                 </div>
             </div>
@@ -313,7 +308,7 @@
 
     </main>
 
-    <!-- Musik latar dari video resmi YouTube; tombol kontrol mengambang di pojok kanan bawah -->
+    <!-- Musik latar dari video resmi YouTube -->
     <iframe
         id="bg-music-player"
         title="Bergema Sampai Selamanya - Nadhif Basalamah"
@@ -330,6 +325,9 @@
     </button>
 
     <script>
+        // Masukkan URL Google Apps Script Web App di bawah ini:
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzIYbwZwGvtubqdd7tMrrkmKwPoCAq9V_Y_IXltp-MM_MpuSwxO1OT0xqG62FQfcYXg/exec';
+
         // 1. Generate Kelopak Bunga Berkelanjutan
         const flowerContainer = document.getElementById('flower-container');
         const flowerTypes = ['🍁', '🌺', '🍂', '🌸'];
@@ -341,7 +339,7 @@
             flower.style.left = Math.random() * 100 + 'vw';
             flower.style.fontSize = (Math.random() * 12 + 14) + 'px';
             
-            const duration = Math.random() * 6 + 5; // 5 hingga 11 detik
+            const duration = Math.random() * 6 + 5; 
             flower.style.animationDuration = duration + 's';
             
             flowerContainer.appendChild(flower);
@@ -377,7 +375,6 @@
             }), 'https://www.youtube.com');
         }
 
-        // Animasi pop-up untuk header dan setiap section saat discroll.
         let scrollRevealObserver = null;
         function setupScrollReveal() {
             const revealTargets = mainContent.querySelectorAll(':scope > header, :scope > section');
@@ -403,7 +400,6 @@
 
             revealTargets.forEach((element, index) => {
                 element.classList.add('scroll-reveal');
-                // Sedikit jeda bertahap agar efeknya terasa halus.
                 element.style.transitionDelay = `${Math.min(index * 70, 280)}ms`;
                 scrollRevealObserver.observe(element);
             });
@@ -418,8 +414,6 @@
                 setupScrollReveal();
             }, 600);
 
-            // Memulai lagu setelah tamu menekan tombol "Buka Undangan".
-            // Pemutaran memakai video resmi YouTube, bukan file lagu yang diunggah ulang.
             musicToggle.classList.remove('hidden');
             sendYouTubeCommand('playVideo');
             isPlaying = true;
@@ -427,7 +421,6 @@
             musicToggle.setAttribute('aria-label', 'Jeda musik');
         });
 
-        // Tombol musik di pojok kanan bawah: putar / jeda.
         musicToggle.addEventListener('click', () => {
             if (isPlaying) {
                 sendYouTubeCommand('pauseVideo');
@@ -457,55 +450,96 @@
             }
         }, 1000);
 
-        // 5. Interaksi Form RSVP & Daftar Ucapan (Simpan ke localStorage agar interaktif langsung)
+        // 5. Integrasi RSVP & Daftar Ucapan via Google Apps Script
         const rsvpForm = document.getElementById('rsvp-form');
+        const submitBtn = document.getElementById('submit-btn');
         const wishesContainer = document.getElementById('wishes-container');
 
-        // Load ucapan tersimpan
-        let savedWishes = JSON.parse(localStorage.getItem('wedding_wishes')) || [];
-        
-        function renderWishes() {
-            let html = '';
-            const allWishes = [
-                { name: "Elena & Family", status: "Hadir", message: "Selamat berbahagia Arif & Lubna! Semoga menjadi keluarga yang harmonis selamanya. 🌹", time: "Baru saja" },
-                ...savedWishes
-            ];
+        // Fungsi Ambil Data Ucapan dari Google Sheets
+        function fetchWishes() {
+            if (SCRIPT_URL.includes('PASTE_URL')) {
+                wishesContainer.innerHTML = `<div class="glass-card p-4 rounded-xl border border-[#d4af37]/20 text-xs text-center text-red-300">URL Script belum dimasukkan di file HTML.</div>`;
+                return;
+            }
 
-            allWishes.forEach(item => {
-                html += `
-                    <div class="glass-card p-4 rounded-xl border border-[#d4af37]/20 text-xs">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-bold text-[#d4af37] font-serif-lux">${escapeHtml(item.name)} <span class="text-[10px] text-gray-400 font-normal">(${escapeHtml(item.status)})</span></span>
-                            <span class="text-[10px] text-gray-400">${item.time}</span>
-                        </div>
-                        <p class="text-gray-200 mt-1">${escapeHtml(item.message)}</p>
-                    </div>
-                `;
-            });
-            wishesContainer.innerHTML = html;
+            fetch(SCRIPT_URL)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        wishesContainer.innerHTML = `<div class="glass-card p-4 rounded-xl border border-[#d4af37]/20 text-xs text-center text-gray-400">Belum ada ucapan yang masuk.</div>`;
+                        return;
+                    }
+
+                    let html = '';
+                    // Urutkan dari yang terbaru (dibalik)
+                    data.reverse().forEach(item => {
+                        let formattedDate = item.time ? new Date(item.time).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Baru saja';
+                        html += `
+                            <div class="glass-card p-4 rounded-xl border border-[#d4af37]/20 text-xs">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="font-bold text-[#d4af37] font-serif-lux">${escapeHtml(item.name)} <span class="text-[10px] text-gray-400 font-normal">(${escapeHtml(item.status)})</span></span>
+                                    <span class="text-[10px] text-gray-400">${formattedDate}</span>
+                                </div>
+                                <p class="text-gray-200 mt-1">${escapeHtml(item.message)}</p>
+                            </div>
+                        `;
+                    });
+                    wishesContainer.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error fetching wishes:', error);
+                    wishesContainer.innerHTML = `<div class="glass-card p-4 rounded-xl border border-[#d4af37]/20 text-xs text-center text-red-300">Gagal memuat daftar ucapan.</div>`;
+                });
         }
 
+        // Kirim Data RSVP ke Google Sheets saat Form Disubmit
         rsvpForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            
+            if (SCRIPT_URL.includes('PASTE_URL')) {
+                alert("Harap masukkan URL Google Apps Script terlebih dahulu pada file HTML.");
+                return;
+            }
+
             const name = document.getElementById('rsvp-name').value;
             const status = document.getElementById('rsvp-status').value;
             const message = document.getElementById('rsvp-message').value;
 
-            const newWish = { name, status, message, time: "Baru saja" };
-            savedWishes.unshift(newWish);
-            localStorage.setItem('wedding_wishes', JSON.stringify(savedWishes));
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Mengirim...";
 
-            renderWishes();
-            rsvpForm.reset();
-            alert("Terima kasih! Konfirmasi kehadiran dan ucapan Anda berhasil dikirim.");
+            const payload = { name, status, message };
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert("Terima kasih! Konfirmasi kehadiran dan ucapan Anda berhasil dikirim.");
+                rsvpForm.reset();
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Kirim Konfirmasi dan Ucapan";
+                fetchWishes(); // Refresh daftar ucapan otomatis
+            })
+            .catch(error => {
+                console.error('Error submitting RSVP:', error);
+                alert("Terjadi kesalahan saat mengirim data. Silakan coba lagi.");
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Kirim Konfirmasi dan Ucapan";
+            });
         });
 
         function escapeHtml(text) {
+            if (!text) return '';
             const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+            return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
         }
 
-        renderWishes();
+        // Muat daftar ucapan saat halaman dibuka
+        fetchWishes();
+        // Opsional: Refresh otomatis setiap 30 detik agar ucapan dari tamu lain langsung kelihatan
+        setInterval(fetchWishes, 30000);
     </script>
 </body>
 </html>
