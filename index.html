@@ -370,7 +370,7 @@
     </main>
 
     <!-- Audio latar menggunakan link file MP3 langsung (Anda dapat mengganti URL src dengan file audio pilihan Anda) -->
-    <audio id="bg-audio" loop preload="auto">
+    <audio id="bg-audio" loop preload="auto" autoplay playsinline>
         <source src="https://www.bensound.com/bensound-music/bensound-tenderness.mp3" type="audio/mpeg">
     </audio>
 
@@ -420,6 +420,29 @@
         const bgAudio = document.getElementById('bg-audio');
         const musicToggle = document.getElementById('music-toggle');
         let isPlaying = false;
+
+        // Coba putar musik otomatis saat halaman dimuat.
+        // Browser dapat memblokir autoplay bersuara; tombol "Buka Undangan"
+        // menjadi pemicu interaksi pengguna agar musik tetap bisa dimulai.
+        bgAudio.play().then(() => {
+            isPlaying = true;
+            musicToggle.innerText = 'Ⅱ';
+            musicToggle.setAttribute('aria-label', 'Jeda musik');
+        }).catch(() => {
+            // Autoplay mungkin diblokir browser. Musik akan dicoba lagi
+            // ketika tamu menekan tombol "Buka Undangan".
+        });
+
+        bgAudio.addEventListener('play', () => {
+            isPlaying = true;
+            musicToggle.innerText = 'Ⅱ';
+            musicToggle.setAttribute('aria-label', 'Jeda musik');
+        });
+        bgAudio.addEventListener('pause', () => {
+            isPlaying = false;
+            musicToggle.innerText = '▶';
+            musicToggle.setAttribute('aria-label', 'Putar musik');
+        });
 
         let scrollRevealObserver = null;
         function setupScrollReveal() {
