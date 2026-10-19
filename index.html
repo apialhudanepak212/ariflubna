@@ -369,9 +369,10 @@
 
     </main>
 
-    <!-- Audio latar menggunakan link file MP3 langsung (Anda dapat mengganti URL src dengan file audio pilihan Anda) -->
-    <audio id="bg-audio" loop preload="auto" autoplay playsinline>
-        <source src="https://www.bensound.com/bensound-music/bensound-tenderness.mp3" type="audio/mpeg">
+    <!-- Simpan file musik bernama music.mp3 di folder yang sama dengan index.html -->
+    <audio id="bg-audio" loop preload="auto" playsinline>
+        <source src="music.mp3" type="audio/mpeg">
+        Browser Anda tidak mendukung pemutar audio.
     </audio>
 
     <button id="music-toggle" type="button" aria-label="Putar musik" title="Putar / jeda musik"
@@ -443,6 +444,9 @@
             musicToggle.innerText = '▶';
             musicToggle.setAttribute('aria-label', 'Putar musik');
         });
+        bgAudio.addEventListener('error', () => {
+            console.error('File musik tidak ditemukan atau tidak dapat diputar. Pastikan music.mp3 berada di folder yang sama dengan index.html.');
+        });
 
         let scrollRevealObserver = null;
         function setupScrollReveal() {
@@ -489,7 +493,7 @@
                 musicToggle.innerText = 'Ⅱ';
                 musicToggle.setAttribute('aria-label', 'Jeda musik');
             }).catch(error => {
-                console.log("Autoplay dicegah oleh browser:", error);
+                console.warn("Musik belum dapat diputar. Pastikan file music.mp3 tersedia; jika autoplay diblokir, tekan tombol musik setelah undangan dibuka.", error);
             });
         });
 
@@ -505,7 +509,8 @@
                     musicToggle.setAttribute('aria-label', 'Jeda musik');
                     isPlaying = true;
                 }).catch(error => {
-                    console.log("Gagal memutar audio:", error);
+                    console.error("Gagal memutar musik. Periksa file music.mp3 dan format MP3-nya.", error);
+                    alert("Musik belum bisa diputar. Pastikan file music.mp3 sudah diunggah bersama index.html.");
                 });
             }
         });
