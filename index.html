@@ -369,16 +369,10 @@
 
     </main>
 
-    <!-- Musik latar dari video resmi YouTube -->
-    <iframe
-        id="bg-music-player"
-        title="Background Music"
-        src="https://www.youtube.com/embed/5x8Nbq0h1Ho?enablejsapi=1&autoplay=0&controls=0&disablekb=1&loop=1&playlist=5x8Nbq0h1Ho&playsinline=1"
-        allow="autoplay; encrypted-media"
-        referrerpolicy="strict-origin-when-cross-origin"
-        style="position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;bottom:0;left:0;border:0;"
-        aria-hidden="true">
-    </iframe>
+    <!-- Audio latar menggunakan link file MP3 langsung (Anda dapat mengganti URL src dengan file audio pilihan Anda) -->
+    <audio id="bg-audio" loop preload="auto">
+        <source src="https://www.bensound.com/bensound-music/bensound-tenderness.mp3" type="audio/mpeg">
+    </audio>
 
     <button id="music-toggle" type="button" aria-label="Putar musik" title="Putar / jeda musik"
         class="hidden fixed bottom-6 right-6 z-[60] w-12 h-12 rounded-full glass-card border border-[#d4af37] flex items-center justify-center text-[#d4af37] text-xl shadow-2xl hover:scale-110 transition-all">
@@ -423,18 +417,9 @@
         const openBtn = document.getElementById('open-btn');
         const coverSection = document.getElementById('cover');
         const mainContent = document.getElementById('main-content');
-        const bgMusicPlayer = document.getElementById('bg-music-player');
+        const bgAudio = document.getElementById('bg-audio');
         const musicToggle = document.getElementById('music-toggle');
         let isPlaying = false;
-
-        function sendYouTubeCommand(command) {
-            if (!bgMusicPlayer || !bgMusicPlayer.contentWindow) return;
-            bgMusicPlayer.contentWindow.postMessage(JSON.stringify({
-                event: 'command',
-                func: command,
-                args: []
-            }), 'https://www.youtube.com');
-        }
 
         let scrollRevealObserver = null;
         function setupScrollReveal() {
@@ -476,23 +461,29 @@
             }, 600);
 
             musicToggle.classList.remove('hidden');
-            sendYouTubeCommand('playVideo');
-            isPlaying = true;
-            musicToggle.innerText = 'Ⅱ';
-            musicToggle.setAttribute('aria-label', 'Jeda musik');
+            bgAudio.play().then(() => {
+                isPlaying = true;
+                musicToggle.innerText = 'Ⅱ';
+                musicToggle.setAttribute('aria-label', 'Jeda musik');
+            }).catch(error => {
+                console.log("Autoplay dicegah oleh browser:", error);
+            });
         });
 
         musicToggle.addEventListener('click', () => {
             if (isPlaying) {
-                sendYouTubeCommand('pauseVideo');
+                bgAudio.pause();
                 musicToggle.innerText = '▶';
                 musicToggle.setAttribute('aria-label', 'Putar musik');
                 isPlaying = false;
             } else {
-                sendYouTubeCommand('playVideo');
-                musicToggle.innerText = 'Ⅱ';
-                musicToggle.setAttribute('aria-label', 'Jeda musik');
-                isPlaying = true;
+                bgAudio.play().then(() => {
+                    musicToggle.innerText = 'Ⅱ';
+                    musicToggle.setAttribute('aria-label', 'Jeda musik');
+                    isPlaying = true;
+                }).catch(error => {
+                    console.log("Gagal memutar audio:", error);
+                });
             }
         });
 
